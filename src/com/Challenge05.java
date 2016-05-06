@@ -17,7 +17,7 @@ import java.util.Set;
 
 public class Challenge05 {
 
-	private static final String INPUT_PATH = "C:/Users/toni/workspaces/workspace_testing/tuenti_contest_2016/input/";
+	private static final String INPUT_PATH = "C:/Users/toni/git/tuenti_contest_2016/input/";
 	//private static final String OUTPUT_PATH = "C:/Users/toni/workspaces/workspace_testing/tuenti_contest_2016/output/";
 
 	private static final String INPUT_WORDS = INPUT_PATH + "challenge05_words.txt";
@@ -48,7 +48,7 @@ public class Challenge05 {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("challenge04 - finished");
+		System.out.println("challenge05 - finished");
 	}
 	
 	private static Boolean play(List<LetterFrequency> lettersFrequencyList) throws Exception {
@@ -83,6 +83,10 @@ public class Challenge05 {
 				}
 			} else {
 				solved = true;
+				System.out.println(in.readLine());
+				System.out.println(in.readLine());
+				System.out.println(in.readLine());
+				System.out.println(in.readLine());
 			}
 		}
 		echoSocket.close();
