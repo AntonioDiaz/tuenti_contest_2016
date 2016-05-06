@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.util.Scanner;
 
 public class Challenge07 {
-
 	private static final String INPUT_PATH = "C:/Users/A549232/workspaces/workspace_test/contest/src/input_files/";
 	private static final String OUTPUT_PATH = "C:/Users/A549232/workspaces/workspace_test/contest/src/output_files/";
 
