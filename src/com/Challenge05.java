@@ -10,105 +10,122 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Challenge05 {
 
 	private static final String INPUT_PATH = "C:/Users/toni/git/tuenti_contest_2016/input/";
-	//private static final String OUTPUT_PATH = "C:/Users/toni/workspaces/workspace_testing/tuenti_contest_2016/output/";
 
 	private static final String INPUT_WORDS = INPUT_PATH + "challenge05_words.txt";
-	//private static final String OUTPUT_FILE_NAME = OUTPUT_PATH + "testOuput04_huge.txt";
 
-	private static final String hostName = "52.49.91.111";
-	private static final int portNumber = 9988;
+	private static final String HOST_IP = "52.49.91.111";
+	private static final int PORT_NUMBER = 9988;
+	private static final int INIT_WORD_SIZE = 4;
 	
 	public static void main(String[] args) throws FileNotFoundException {
 		/* reading words */
-		List<String> wordsList = new ArrayList<String>(30);
 		List<LetterFrequency> lettersFrequencyList = null;
 		try {
 			Scanner scanner = new Scanner(new File(INPUT_WORDS));
-			while (scanner.hasNext()) {
-				String line = scanner.nextLine();
-				if (line.length()==4) {
-					wordsList.add(line);
-				}
-			}
-			lettersFrequencyList = calculateFrecuency (wordsList);
 			scanner.close();
-			Boolean solved;
-			do {
-				solved = play(lettersFrequencyList);	
-			} while (!solved);
-			
+			Boolean finished = false;
+			Integer level = 1; 
+			while (!finished) {
+				List<String> words = readWords(INIT_WORD_SIZE);
+				lettersFrequencyList = calculateFrecuency (words);
+				Socket echoSocket = new Socket(HOST_IP, PORT_NUMBER);
+				PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
+				BufferedReader in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
+				System.out.println(in.readLine());
+				out.println(" ");
+				Boolean gameOver = false;
+				Set<LetterFrequency> lettersUsed = new HashSet<LetterFrequency>();
+				while (!gameOver) {
+					for (int i=0; i<10; i++) {
+						String line = in.readLine();
+						System.out.println(i + "-" + line);
+						if (line.contains("GAME OVER")) {
+							gameOver = true;
+						}
+					}
+					if (!gameOver) {
+						String gaps = in.readLine();
+						System.out.println(gaps);
+						if (gaps.contains("_")) {
+							if (!gameOver) {
+								gaps = gaps.replaceAll(" ", "");
+								gaps = gaps.replaceAll("_", "\\\\w");
+								List<String> filterList = filterList(words, gaps);
+								System.out.println("filterList -->" + filterList);
+								lettersFrequencyList = calculateFrecuency (filterList);
+								lettersFrequencyList.removeAll(lettersUsed);
+								LetterFrequency letterFrequency = lettersFrequencyList.get(0);
+								lettersUsed.add(letterFrequency);
+								System.out.println("Testing with...." + letterFrequency.getLetter());					
+								out.println(letterFrequency.getLetter().toString());
+							}
+						} else {
+							if (level.equals(1)) {
+								for (int i=0; i<3; i++) {				
+									String line = in.readLine();
+									System.out.println(i + " " + line);
+								}
+							}
+							for (int i=0; i<2; i++) {				
+								String line = in.readLine();
+								System.out.println(i + " " + line);
+							}
+								//								if (i==3) {
+								//									String string = (line.split(": "))[1];
+								//									System.out.println(level + "solution..." + string);
+								//								}
+							lettersUsed = new HashSet<LetterFrequency>();
+							words = readWords(INIT_WORD_SIZE + level);
+							out.println("a");
+							level++;
+						}
+					}
+				}
+				echoSocket.close();
+				out.close();
+				in.close();					
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		System.out.println("challenge05 - finished");
 	}
 	
-	private static Boolean play(List<LetterFrequency> lettersFrequencyList) throws Exception {
-		Socket echoSocket = new Socket(hostName, portNumber);
-		PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
-		BufferedReader in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
-		//BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println(in.readLine());
-		out.println(" ");
-		Boolean solved = false;
-		Boolean exit = false;
-		//Set<Character> usedCharacters = new HashSet<Character>();
-		Integer j = 0;
-		while (!exit) {
-			for (int i=0; i<10; i++) {
-				String line = in.readLine();
-				System.out.println(line);
-				if (line.contains("GAME OVER")) {
-					exit = true;
-				}
-			}
-			String gaps = in.readLine();
-			System.out.println(gaps);
-			if (gaps.contains("_")) {
-				//gaps = gaps.trim();
-				//gaps.replace("_", )
-				if (!exit) {
-					//String letter = stdIn.readLine();
-					LetterFrequency letterFrequency = lettersFrequencyList.get(j++);
-					System.out.println("Testing with...." + letterFrequency.getLetter());					
-					out.println(letterFrequency.getLetter().toString());
-				}
-			} else {
-				solved = true;
-				System.out.println(in.readLine());
-				System.out.println(in.readLine());
-				System.out.println(in.readLine());
-				System.out.println(in.readLine());
+	public static List<String> readWords(Integer wordSize) throws FileNotFoundException {
+		List<String> wordsList = new ArrayList<String>();
+		Scanner scanner = new Scanner(new File(INPUT_WORDS));
+		while (scanner.hasNext()) {
+			String line = scanner.nextLine();
+			if (line.length()==wordSize) {
+				wordsList.add(line);
 			}
 		}
-		echoSocket.close();
-		out.close();
-		in.close();		
-		return solved;
+		scanner.close();
+		return wordsList;
 	}
-
+	
+	
 	/**
 	 * Filter a list of words.
 	 * @param inputList
 	 * @param charArray
 	 * @return
 	 */
-	public static List<String> filterList(List<String>inputList, char[] charArray) {
+	public static List<String> filterList(List<String>inputList, String patternStr) {
 		List<String> outputList = new ArrayList<String>();
+		Pattern pattern = Pattern.compile(patternStr);
 		for (String myWord : inputList) {
-			boolean valid = true;
-			for (int i = 0; i < charArray.length; i++) {
-				valid &= myWord.charAt(i)==charArray[i];
-			}
-			if (valid) {
+			if (pattern.matcher(myWord).matches()) {
 				outputList.add(myWord);
 			}
 		}
@@ -168,6 +185,15 @@ public class Challenge05 {
 		public int hashCode() {
 			return letter.hashCode();
 		}
+		
+		@Override
+		public boolean equals(Object other){
+		    if (other == null) return false;
+		    if (other == this) return true;
+		    if (!(other instanceof LetterFrequency))return false;
+		    return ((LetterFrequency)other).getLetter().equals(this.getLetter());
+		}		
+		
 		@Override
 		public String toString() {
 			return "LetterFrequency [letter=" + letter + ", repetitions=" + repetitions + "]";
